@@ -1,5 +1,5 @@
 {
-  "name": "gitp",
+  "name": "@guilleamutio/gitp",
   "version": "1.0.3",
   "main": "dist/index.js",
   "bin": {
@@ -45,7 +45,7 @@
     "profile",
     "cli"
   ],
-  "author": "Guilermo Amutio",
+  "author": "Guillermo Amutio",
   "license": "GPL-3.0",
   "repository": {
     "type": "git",
