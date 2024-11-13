@@ -1,22 +1,21 @@
 #!/usr/bin/env node
 
 import { Command } from 'commander';
-import chalk from 'chalk';
+import { addCommand } from '@/commands/add';
 
 const program = new Command();
 
 program
-  .name('git-profile')
+  .name('gitp')
   .description('CLI to manage multiple git profiles')
   .version('0.0.1');
 
-// Example command
-program
-  .command('list')
-  .description('List all git profiles')
-  .action(() => {
-    console.log(chalk.blue('Listing all profiles...'));
-    // Implementation will go here
-  });
+// Register commands
+addCommand(program);
+
+// Show help by default if no command is provided
+if (!process.argv.slice(2).length) {
+  program.help();
+}
 
 program.parse();
