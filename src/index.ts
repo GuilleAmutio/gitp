@@ -97,8 +97,20 @@ async function handleMainCommand() {
       await gitManager.setGlobalConfig(selectedProfile);
       console.log(chalk.green(`Successfully set global git config to profile: ${profile}`));
     } else {
-      await gitManager.setLocalConfig(selectedProfile);
-      console.log(chalk.green(`Successfully set local git config to profile: ${profile}`));
+      try {
+        await gitManager.setLocalConfig(selectedProfile);
+        console.log(chalk.green(`Successfully set local git config to profile: ${profile}`));
+      } catch (error) {
+        if (error instanceof Error && error.message.includes('Not a git repository')) {
+          console.error(chalk.red('\nError: Cannot set local configuration outside of a git repository.'));
+          console.log(chalk.yellow('Tip: Either:'));
+          console.log(chalk.yellow('1. Navigate to a git repository'));
+          console.log(chalk.yellow('2. Initialize a new git repository with `git init`'));
+          console.log(chalk.yellow('3. Or choose global scope instead'));
+          return;
+        }
+        throw error;
+      }
     }
 
     console.log(chalk.yellow('Happy coding! 🚀'));

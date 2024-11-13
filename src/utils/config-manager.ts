@@ -8,24 +8,20 @@ export class ConfigManager {
 
   constructor() {
     this.configPath = path.join(os.homedir(), '.gitp');
-    this.ensureConfigExists();
   }
 
-  private ensureConfigExists(): void {
-    if (!fs.existsSync(this.configPath)) {
-      const initialConfig: GitConfig = {
-        profiles: {}
-      };
-      fs.writeFileSync(this.configPath, JSON.stringify(initialConfig, null, 2));
+  getConfig(): GitConfig {
+    try {
+      const configData = fs.readFileSync(this.configPath, 'utf8');
+      return JSON.parse(configData);
+    } catch (error) {
+      return { profiles: {} };
     }
   }
 
-  public getConfig(): GitConfig {
-    const configContent = fs.readFileSync(this.configPath, 'utf-8');
-    return JSON.parse(configContent);
-  }
-
-  public saveConfig(config: GitConfig): void {
-    fs.writeFileSync(this.configPath, JSON.stringify(config, null, 2));
+  saveConfig(config: GitConfig): void {
+    const configData = JSON.stringify(config, null, 2);
+    const normalizedData = configData.replace(/\r?\n/g, os.EOL);
+    fs.writeFileSync(this.configPath, normalizedData, 'utf8');
   }
 } 
