@@ -1,9 +1,13 @@
 #!/usr/bin/env node
 
 import { Command } from 'commander';
+import chalk from 'chalk';
+import inquirer from 'inquirer';
 import { addCommand } from '@/commands/add';
 import { removeCommand } from '@/commands/remove';
 import { editCommand } from '@/commands/edit';
+import { ConfigManager } from '@/utils/config-manager';
+import { GitManager } from '@/utils/git-manager';
 
 const program = new Command();
 
@@ -17,9 +21,104 @@ addCommand(program);
 removeCommand(program);
 editCommand(program);
 
-// Show help by default if no command is provided
-if (!process.argv.slice(2).length) {
-  program.help();
+// Main command handler
+async function handleMainCommand() {
+  try {
+    const configManager = new ConfigManager();
+    const gitManager = new GitManager();
+    const config = configManager.getConfig();
+    const currentConfig = await gitManager.getCurrentConfig();
+
+    const profiles = Object.keys(config.profiles);
+    if (profiles.length === 0) {
+      console.log(chalk.yellow('No profiles found. Add one with:'));
+      console.log(chalk.blue('gitp add <profile> -n <name> -e <email>'));
+      return;
+    }
+
+    // First prompt: Select profile
+    const choices = profiles.map(profile => {
+      const isCurrent = 
+        config.profiles[profile].email === currentConfig.email && 
+        config.profiles[profile].name === currentConfig.name;
+
+      return {
+        name: isCurrent ? chalk.yellow(`${profile} (current)`) : profile,
+        value: profile,
+        short: profile
+      };
+    });
+
+    const { profile } = await inquirer.prompt({
+      type: 'list',
+      name: 'profile',
+      message: 'Select a profile:',
+      choices,
+      pageSize: 10,
+      loop: false,
+      filter: (input: string) => {
+        return profiles.find(p => p.toLowerCase().includes(input.toLowerCase())) || input;
+      }
+    });
+
+    // Second prompt: Select scope
+    const { scope } = await inquirer.prompt({
+      type: 'list',
+      name: 'scope',
+      message: 'Select configuration scope:',
+      choices: [
+        { 
+          name: chalk.blue('Local') + ' - Only for this repository',
+          value: 'local'
+        },
+        { 
+          name: chalk.yellow('Global') + ' - For all repositories',
+          value: 'global'
+        }
+      ],
+      pageSize: 2,
+      loop: false
+    });
+
+    // Show profile details
+    const selectedProfile = config.profiles[profile];
+    console.log('\nProfile details:');
+    console.log(chalk.cyan('  Profile: ') + profile);
+    console.log(chalk.cyan('  Name:    ') + selectedProfile.name);
+    console.log(chalk.cyan('  Email:   ') + selectedProfile.email);
+    if (selectedProfile.signingKey) {
+      console.log(chalk.cyan('  GPG Key: ') + selectedProfile.signingKey);
+    }
+    console.log(chalk.cyan('  Scope:   ') + (scope === 'local' ? 'Local (this repository)' : 'Global (all repositories)'));
+    console.log(); // Empty line for better readability
+
+    // Apply the selected profile with the chosen scope
+    if (scope === 'global') {
+      await gitManager.setGlobalConfig(selectedProfile);
+      console.log(chalk.green(`Successfully set global git config to profile: ${profile}`));
+    } else {
+      await gitManager.setLocalConfig(selectedProfile);
+      console.log(chalk.green(`Successfully set local git config to profile: ${profile}`));
+    }
+
+    console.log(chalk.yellow('Happy coding! 🚀'));
+    
+  } catch (error: unknown) {
+    if (error instanceof Error) {
+      if (error.message.includes('Not a git repository')) {
+        console.error(chalk.red('Error: Not in a git repository'));
+      } else {
+        console.error(chalk.red('Error:'), error.message);
+      }
+    } else {
+      console.error(chalk.red('An unknown error occurred'));
+    }
+  }
 }
 
-program.parse();
+// If no arguments provided, run the interactive profile selector
+if (process.argv.length === 2) {
+  handleMainCommand();
+} else {
+  program.parse();
+}
