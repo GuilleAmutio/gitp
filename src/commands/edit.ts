@@ -3,30 +3,61 @@ import chalk from 'chalk';
 import inquirer from 'inquirer';
 import { ConfigManager } from '@/utils/config-manager';
 import { GitProfile } from '@/types';
+import { GitManager } from '@/utils/git-manager';
 
 export function editCommand(program: Command): void {
   program
     .command('edit')
     .description('Edit a git profile')
-    .argument('<profile>', 'Profile name')
-    .showHelpAfterError('Use --help for usage information')
-    .action(async (profileName: string) => {
+    .action(async () => {
       try {
         const configManager = new ConfigManager();
         const config = configManager.getConfig();
+        const gitManager = new GitManager();
+        const currentConfig = await gitManager.getCurrentConfig();
 
-        if (!config.profiles[profileName]) {
-          console.log(chalk.red(`Profile "${profileName}" does not exist`));
+        const profiles = Object.keys(config.profiles);
+        if (profiles.length === 0) {
+          console.log(chalk.yellow('No profiles found. Add one with:'));
+          console.log(chalk.blue('gitp add <profile> -n <name> -e <email>'));
           return;
         }
 
-        const currentProfile = config.profiles[profileName];
+        // First prompt: Select profile to edit
+        const { profile } = await inquirer.prompt({
+          type: 'list',
+          name: 'profile',
+          message: 'Select a profile to edit:',
+          choices: profiles.map(profile => {
+            const isCurrent = 
+              config.profiles[profile].email === currentConfig.email && 
+              config.profiles[profile].name === currentConfig.name;
 
+            if (isCurrent) {
+              return new inquirer.Separator(chalk.gray(` ${profile} (current)`));
+            }
+
+            return {
+              name: profile,
+              value: profile,
+              short: profile
+            };
+          }),
+          pageSize: 10,
+          loop: false,
+          filter: (input: string) => {
+            return profiles.find(p => p.toLowerCase().includes(input.toLowerCase())) || input;
+          }
+        });
+
+        const currentProfile = config.profiles[profile];
+
+        // Edit prompts
         const answers = await inquirer.prompt([
           {
             type: 'input',
             name: 'newProfileName',
-            message: `Edit name of the profile (${profileName}):`,
+            message: `Edit profile name (${profile}):`,
             default: '',
           },
           {
@@ -44,9 +75,9 @@ export function editCommand(program: Command): void {
           {
             type: 'input',
             name: 'signingKey',
-            message: `Edit Git key (${currentProfile.signingKey || 'none'}):`,
+            message: `Edit Git signing key (${currentProfile.signingKey || 'none'}):`,
             default: '',
-          },
+          }
         ]);
 
         // Create updated profile
@@ -59,18 +90,35 @@ export function editCommand(program: Command): void {
         };
 
         // Handle profile name change
-        if (answers.newProfileName && answers.newProfileName !== profileName) {
-          delete config.profiles[profileName];
+        if (answers.newProfileName && answers.newProfileName !== profile) {
+          delete config.profiles[profile];
           config.profiles[answers.newProfileName] = updatedProfile;
-          console.log(chalk.green(`Profile name changed from "${profileName}" to "${answers.newProfileName}"`));
+          console.log(chalk.green(`Profile name changed from "${profile}" to "${answers.newProfileName}"`));
         } else {
-          config.profiles[profileName] = updatedProfile;
+          config.profiles[profile] = updatedProfile;
         }
 
         configManager.saveConfig(config);
-        console.log(chalk.green('Profile updated successfully'));
-      } catch (error) {
-        console.error(chalk.red('Error editing profile:'), error);
+
+        // Show updated profile details
+        const finalProfileName = answers.newProfileName || profile;
+        console.log('\nUpdated profile details:');
+        console.log(chalk.cyan('  Profile: ') + finalProfileName);
+        console.log(chalk.cyan('  Name:    ') + updatedProfile.name);
+        console.log(chalk.cyan('  Email:   ') + updatedProfile.email);
+        if (updatedProfile.signingKey) {
+          console.log(chalk.cyan('  GPG Key: ') + updatedProfile.signingKey);
+        }
+        console.log();
+
+        console.log(chalk.green('Profile updated successfully! 🎉'));
+        
+      } catch (error: unknown) {
+        if (error instanceof Error) {
+          console.error(chalk.red('Error editing profile:'), error.message);
+        } else {
+          console.error(chalk.red('An unknown error occurred'));
+        }
       }
     });
 } 
