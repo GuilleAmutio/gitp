@@ -16,7 +16,7 @@
     "link": "npm link",
     "start": "ts-node src/index.ts",
     "clean": "rimraf dist",
-    "prepare": "chmod +x dist/index.js",
+    "prepare": "npm run build && chmod +x dist/index.js",
     "cleanup": "rm -f ~/.gitp",
     "prepublishOnly": "npm run build",
     "version": "git add -A src",
