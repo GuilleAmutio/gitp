@@ -3,6 +3,7 @@
 import { Command } from 'commander';
 import { addCommand } from '@/commands/add';
 import { removeCommand } from '@/commands/remove';
+import { editCommand } from '@/commands/edit';
 
 const program = new Command();
 
@@ -14,6 +15,7 @@ program
 // Register commands
 addCommand(program);
 removeCommand(program);
+editCommand(program);
 
 // Show help by default if no command is provided
 if (!process.argv.slice(2).length) {
