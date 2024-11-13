@@ -6,7 +6,13 @@ export interface GitProfile {
 
 export interface GitConfig {
   profiles: {
-    [name: string]: GitProfile;
+    [key: string]: GitProfile;
   };
-  currentGlobal?: string;
+}
+
+export interface AddAnswers {
+  profileName: string;
+  name: string;
+  email: string;
+  signingKey?: string;
 } 
