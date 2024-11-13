@@ -32,7 +32,7 @@ async function handleMainCommand() {
     const profiles = Object.keys(config.profiles);
     if (profiles.length === 0) {
       console.log(chalk.yellow('No profiles found. Add one with:'));
-      console.log(chalk.blue('gitp add <profile> -n <name> -e <email>'));
+      console.log(chalk.blue('gitp add'));
       return;
     }
 
