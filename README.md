@@ -56,7 +56,7 @@ Contributions, issues, and feature requests are welcome! Feel free to check the 
 
 ## Author
 
-👤 **Guilermo Amutio**
+👤 **Guillermo Amutio**
 
 * Github: [@guilleamutio](https://github.com/guilleamutio)
 
