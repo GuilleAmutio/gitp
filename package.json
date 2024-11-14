@@ -49,10 +49,10 @@
   "license": "GPL-3.0",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/guileamutio/gitp.git"
+    "url": "git+https://github.com/guilleamutio/gitp.git"
   },
   "bugs": {
-    "url": "https://github.com/guileamutio/gitp/issues"
+    "url": "https://github.com/guilleamutio/gitp/issues"
   },
-  "homepage": "https://github.com/guileamutio/gitp#readme"
+  "homepage": "https://github.com/guilleamutio/gitp#readme"
 }
