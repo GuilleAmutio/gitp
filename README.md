@@ -59,6 +59,7 @@ Contributions, issues, and feature requests are welcome! Feel free to check the 
 👤 **Guillermo Amutio**
 
 * Github: [@guilleamutio](https://github.com/guilleamutio)
+* LinkedIn: [@guillermo-amutio](https://www.linkedin.com/in/guillermo-amutio-duarte/)
 
 ## Show your support
 
